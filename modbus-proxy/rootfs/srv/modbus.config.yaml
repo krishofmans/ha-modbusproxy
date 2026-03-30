@@ -1,10 +1,5 @@
 devices:
-  - modbus:
-      url: __HOST__:__PORT__ # device url (mandatory)
-      timeout: __TIMEOUT__ # communication timeout (s) (optional, default: 10)
-      connection_time: __CONNECTIONTIME__ # delay after connection (s) (optional, default: 0)
-    listen:
-      bind: 0:__LISTENPORT__ # listening address (mandatory)
+# __DEVICES__
 logging:
   version: 1
   formatters:

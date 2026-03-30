@@ -3,27 +3,38 @@
 set +x
 
 # Create main config
-CONFIG_HOST=$(bashio::config 'upstreamhost')
-CONFIG_PORT=$(bashio::config 'upstreamport')
-CONFIG_LISTENPORT=$(bashio::config 'listenport')
-CONFIG_TIMEOUT=$(bashio::config 'timeout')
-CONFIG_CONNECTIONTIME=$(bashio::config 'connection_time')
 CONFIG_LOGLEVEL=$(bashio::config 'loglevel')
 
-
 echo "Preparing to run modbus-proxy"
-echo "Upstream: $CONFIG_HOST:$CONFIG_PORT"
-echo "Listen: $CONFIG_LISTENPORT"
-echo "Timeout: $CONFIG_TIMEOUT"
-echo "Connection Time: $CONFIG_CONNECTIONTIME"
 echo "Loglevel: $CONFIG_LOGLEVEL"
 
-sed -i "s/__HOST__/${CONFIG_HOST}/g" ./modbus.config.yaml
-sed -i "s/__PORT__/${CONFIG_PORT}/g" ./modbus.config.yaml
-sed -i "s/__LISTENPORT__/${CONFIG_LISTENPORT}/g" ./modbus.config.yaml
-sed -i "s/__TIMEOUT__/${CONFIG_TIMEOUT}/g" ./modbus.config.yaml
-sed -i "s/__CONNECTIONTIME__/${CONFIG_CONNECTIONTIME}/g" ./modbus.config.yaml
-sed -i "s/__LOGLEVEL__/${CONFIG_LOGLEVEL}/g" ./modbus.config.yaml
+# Generate devices configuration
+DEVICES_CONF=""
+for device in $(bashio::config 'devices|keys'); do
+    HOST=$(bashio::config "devices[${device}].upstreamhost")
+    PORT=$(bashio::config "devices[${device}].upstreamport")
+    LISTENPORT=$(bashio::config "devices[${device}].listenport")
+    TIMEOUT=$(bashio::config "devices[${device}].timeout")
+    CONNECTIONTIME=$(bashio::config "devices[${device}].connection_time")
+
+    echo "Adding device: $HOST:$PORT (listening on $LISTENPORT)"
+
+    DEVICES_CONF="${DEVICES_CONF}  - modbus:\n      url: ${HOST}:${PORT}\n      timeout: ${TIMEOUT}\n      connection_time: ${CONNECTIONTIME}\n    listen:\n      bind: 0:${LISTENPORT}\n"
+done
+
+# Strip trailing newline from DEVICES_CONF
+DEVICES_CONF=$(echo -e "$DEVICES_CONF" | sed '$d')
+
+# Use python to perform the replacement to handle multiple lines and special characters correctly
+python3 -c "
+import sys
+content = open('./modbus.config.yaml').read()
+devices_conf = '''$DEVICES_CONF'''.replace('\\\\n', '\n')
+content = content.replace('# __DEVICES__', devices_conf)
+content = content.replace('__LOGLEVEL__', '$CONFIG_LOGLEVEL')
+with open('./modbus.config.yaml', 'w') as f:
+    f.write(content)
+"
 
 echo "Generated Config"
 cat ./modbus.config.yaml
