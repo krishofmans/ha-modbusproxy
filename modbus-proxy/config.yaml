@@ -26,4 +26,9 @@ schema:
       connection_time: float
       timeout: int
   loglevel: list(INFO|DEBUG|ERROR)
+ports:
+  10502/tcp: 10502
+  10503/tcp: 10503
+  10504/tcp: 10504
+  10505/tcp: 10505
 full_access: true
