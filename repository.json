@@ -1,5 +1,5 @@
 {
   "name": "Modbus Proxy Repository",
-  "url": "https://github.com/Akulatraxas/ha-modbusproxy",
-  "maintainer": "Julian Jost <julian@jost-online.eu>"
+  "url": "https://github.com/krishofmans/ha-modbusproxy",
+  "maintainer": "Kris Hofmans <kris@tripled.io>"
 }
